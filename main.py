@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from serial.tools.list_ports import comports
 
 from logger import create_logger
+from outputs import OUTPUT_FUNCTIONS
 from uno_lcd_terminal import UnoLCDTerminal
 
 logger = create_logger(name=__name__, level=logging.DEBUG)
@@ -34,6 +35,10 @@ parser.add_argument("-r", "--change-interval", dest="change_interval",
                          "integer seconds. "
                          "Required if connecting with -c or --connect. "
                          "Defaults to 1.")
+parser.add_argument("-o", "--output", dest="outputs",
+                    metavar="NAME", action="append",
+                    help="The outputs you want to use. At least one is "
+                         "required if connecting with -c or --connect.")
 args = parser.parse_args()
 logger.debug(f"Arguments received: {args}")
 
@@ -72,12 +77,12 @@ elif args.connect:
         port_path = ports[port_path - 1].device
     logger.info(f"Connecting to {port_path}")
     term = UnoLCDTerminal(port_path)
+    if args.outputs is None:
+        logger.error("Please specify at least one output function!")
+        exit(1)
     try:
         term.run(args.update_interval, args.change_interval,
-                 [
-                     lambda: "Function 1",
-                     lambda: "Function 2"
-                 ])
+                 [OUTPUT_FUNCTIONS[o.lower()] for o in args.outputs])
     except KeyboardInterrupt:
         logger.warning("Exiting!")
 else:

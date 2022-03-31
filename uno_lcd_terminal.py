@@ -60,8 +60,13 @@ class UnoLCDTerminal:
             logger.debug(f"Output functions: {len(output_funcs)}")
             last_change = unix()
             curr_func_idx = 0
-            port.write(UnoLCDTerminal.reset_sequence())
-            port.write(UnoLCDTerminal.set_background_color_sequence(
+
+            def write_cmd(sequence: bytes):
+                # logger.debug(f"Command: {sequence}")
+                port.write(sequence)
+
+            write_cmd(UnoLCDTerminal.reset_sequence())
+            write_cmd(UnoLCDTerminal.set_background_color_sequence(
                 UnoLCDTerminalBacklightColor.WHITE))
             while True:
                 if unix() - last_change > change_interval:
@@ -69,12 +74,12 @@ class UnoLCDTerminal:
                     curr_func_idx += 1
                     if curr_func_idx > len(output_funcs) - 1:
                         curr_func_idx = 0
-                port.write(UnoLCDTerminal.clear_sequence())
-                port.write(UnoLCDTerminal.home_sequence())
+                # write_cmd(UnoLCDTerminal.clear_sequence())
+                write_cmd(UnoLCDTerminal.home_sequence())
                 output = output_funcs[curr_func_idx]()
-                for index, line in enumerate(output.split("\n")):
-                    port.write(UnoLCDTerminal.set_cursor_sequence(row=index))
-                    port.write(UnoLCDTerminal.write_string_sequence(line))
+                for index, line in enumerate(output):
+                    write_cmd(UnoLCDTerminal.set_cursor_sequence(row=index))
+                    write_cmd(UnoLCDTerminal.write_string_sequence(line))
                 sleep(update_interval)
 
     @staticmethod
@@ -141,7 +146,7 @@ class UnoLCDTerminal:
         :param string: The string to write.
         :return: Bytes.
         """
-        return b"p" + string.encode() + b"\n"
+        return b"p" + string.encode() + b"\r\n"
 
     @staticmethod
     def set_background_color_sequence(
