@@ -10,9 +10,12 @@ from uno_lcd_terminal import UnoLCDTerminal
 logger = create_logger(name=__name__, level=logging.DEBUG)
 
 parser = ArgumentParser(description="Daemon for the Uno LCD Terminal.")
-parser.add_argument("-l", "--list-ports", dest="list_ports",
+parser.add_argument("-lp", "--list-ports", dest="list_ports",
                     action="store_true",
                     help="List serial ports and exit.")
+parser.add_argument("-lo", "--list-outputs", dest="list_outputs",
+                    action="store_true",
+                    help="List function outputs and exit.")
 parser.add_argument("-c", "--connect", dest="connect",
                     action="store_true",
                     help="Connect to an Uno LCD Terminal.")
@@ -64,6 +67,11 @@ if args.list_ports:
             if value is None:
                 continue
             logger.debug(f"{indent_space}{label}: {value}")
+elif args.list_outputs:
+    logger.info("Listing output functions")
+    for index, (key, value) in enumerate(OUTPUT_FUNCTIONS.items()):
+        logger.info(f"{index + 1} / {len(OUTPUT_FUNCTIONS.keys())}: "
+                    f"{key} - {value.__doc__}")
 elif args.connect:
     port_path = args.port
     if port_path.replace("-", "").isnumeric():
