@@ -62,12 +62,32 @@ class UnoLCDTerminal:
             curr_func_idx = 0
 
             def write_cmd(sequence: bytes):
-                # logger.debug(f"Command: {sequence}")
+                logger.debug(f"Command: {sequence}")
                 port.write(sequence)
 
+            def read_cmd(sequence: bytes) -> bytes:
+                write_cmd(sequence)
+                b = port.read_until()
+                logger.debug(f"Return: {b}")
+                return b
+
+            port.timeout = 1
             write_cmd(UnoLCDTerminal.reset_sequence())
             write_cmd(UnoLCDTerminal.set_background_color_sequence(
                 UnoLCDTerminalBacklightColor.WHITE))
+            try:
+                width = int(read_cmd(
+                    UnoLCDTerminal.get_attribute_sequence(
+                        UnoLCDTerminalAttribute.WIDTH)).decode())
+            except ValueError:
+                width = 16
+            try:
+                height = int(read_cmd(
+                    UnoLCDTerminal.get_attribute_sequence(
+                        UnoLCDTerminalAttribute.HEIGHT)).decode())
+            except ValueError:
+                height = 2
+            logger.debug(f"Width and height: {width}x{height}")
             while True:
                 if unix() - last_change > change_interval:
                     last_change = unix()
@@ -79,7 +99,8 @@ class UnoLCDTerminal:
                 output = output_funcs[curr_func_idx]()
                 for index, line in enumerate(output):
                     write_cmd(UnoLCDTerminal.set_cursor_sequence(row=index))
-                    write_cmd(UnoLCDTerminal.write_string_sequence(line))
+                    write_cmd(UnoLCDTerminal.write_string_sequence(line,
+                                                                   width))
                 sleep(update_interval)
 
     @staticmethod
@@ -139,14 +160,16 @@ class UnoLCDTerminal:
         return b"a" + attr.value
 
     @staticmethod
-    def write_string_sequence(string: str) -> bytes:
+    def write_string_sequence(string: str, width: int) -> bytes:
         """
         Return the write string sequence.
 
         :param string: The string to write.
+        :param width: The width to pad to at least.
         :return: Bytes.
         """
-        return b"p" + string.encode() + b"\r\n"
+        return b"p" + string.encode() + \
+               (b" " * (width - len(string.encode()))) + b"\r\n"
 
     @staticmethod
     def set_background_color_sequence(
