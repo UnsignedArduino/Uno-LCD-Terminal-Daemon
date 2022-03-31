@@ -47,13 +47,21 @@ def memory_function() -> tuple[str, ...]:
 def disk_function() -> tuple[str, ...]:
     """Shows the disk IO counters"""
     io = psutil.disk_io_counters()
-    return f"R: {HumanBytes.format(io.read_bytes, precision=4)}", \
-           f"W: {HumanBytes.format(io.write_bytes, precision=4)}"
+    return f"DR: {HumanBytes.format(io.read_bytes, precision=3)}", \
+           f"DW: {HumanBytes.format(io.write_bytes, precision=3)}"
+
+
+def network_function() -> tuple[str, ...]:
+    """Shows the network IO counters"""
+    io = psutil.net_io_counters()
+    return f"NS: {HumanBytes.format(io.bytes_recv, precision=3)}", \
+           f"NR: {HumanBytes.format(io.bytes_sent, precision=3)}"
 
 
 OUTPUT_FUNCTIONS = {
     "time": time_function,
     "cpu": cpu_function,
     "memory": memory_function,
-    "disk": disk_function
+    "disk": disk_function,
+    "network": network_function
 }
