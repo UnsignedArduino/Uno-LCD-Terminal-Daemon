@@ -44,8 +44,16 @@ def memory_function() -> tuple[str, ...]:
            f"{HumanBytes.format(mem.total)}"
 
 
+def disk_function() -> tuple[str, ...]:
+    """Shows the disk IO counters"""
+    io = psutil.disk_io_counters()
+    return f"R: {HumanBytes.format(io.read_bytes, precision=4)}", \
+           f"W: {HumanBytes.format(io.write_bytes, precision=4)}"
+
+
 OUTPUT_FUNCTIONS = {
     "time": time_function,
     "cpu": cpu_function,
-    "memory": memory_function
+    "memory": memory_function,
+    "disk": disk_function
 }

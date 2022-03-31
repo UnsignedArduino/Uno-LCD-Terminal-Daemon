@@ -6,8 +6,8 @@ from typing import List, Union
 class HumanBytes:
     METRIC_LABELS: List[str] = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
     BINARY_LABELS: List[str] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
-    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005] # PREDEFINED FOR SPEED.
-    PRECISION_FORMATS: List[str] = ["{}{:.0f} {}", "{}{:.1f} {}", "{}{:.2f} {}", "{}{:.3f} {}"] # PREDEFINED FOR SPEED.
+    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005, 0.00005, 0.000005] # PREDEFINED FOR SPEED.
+    PRECISION_FORMATS: List[str] = ["{}{:.0f} {}", "{}{:.1f} {}", "{}{:.2f} {}", "{}{:.3f} {}", "{}{:.4f} {}", "{}{:.5f} {}"] # PREDEFINED FOR SPEED.
 
     @staticmethod
     def format(num: Union[int, float], metric: bool = False,
@@ -19,7 +19,7 @@ class HumanBytes:
 
         assert isinstance(num, (int, float)), "num must be an int or float"
         assert isinstance(metric, bool), "metric must be a bool"
-        assert isinstance(precision, int) and precision >= 0 and precision <= 3, "precision must be an int (range 0-3)"
+        assert isinstance(precision, int) and precision >= 0 and precision <= 4, "precision must be an int (range 0-4)"
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
         last_label = unit_labels[-1]
