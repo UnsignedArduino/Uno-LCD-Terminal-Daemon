@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import psutil
+from human_bytes import HumanBytes
 
 
 def time_function() -> tuple[str, ...]:
@@ -34,7 +35,17 @@ def cpu_function() -> tuple[str, ...]:
            all_times[cpu_function.stat_cycle]
 
 
+def memory_function() -> tuple[str, ...]:
+    """Shows the memory utilization"""
+    mem = psutil.virtual_memory()
+    percent = (mem.used / mem.total) * 100
+    return f"Memory: {percent:.2f}%", \
+           f"{HumanBytes.format(mem.used, label=False).strip()}/" \
+           f"{HumanBytes.format(mem.total)}"
+
+
 OUTPUT_FUNCTIONS = {
     "time": time_function,
-    "cpu": cpu_function
+    "cpu": cpu_function,
+    "memory": memory_function
 }
