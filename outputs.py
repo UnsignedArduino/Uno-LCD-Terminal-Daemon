@@ -54,8 +54,8 @@ def disk_function() -> tuple[str, ...]:
 def network_function() -> tuple[str, ...]:
     """Shows the network IO counters"""
     io = psutil.net_io_counters()
-    return f"NS: {HumanBytes.format(io.bytes_recv, precision=3)}", \
-           f"NR: {HumanBytes.format(io.bytes_sent, precision=3)}"
+    return f"NS: {HumanBytes.format(io.bytes_sent, precision=3)}", \
+           f"NR: {HumanBytes.format(io.bytes_recv, precision=3)}"
 
 
 OUTPUT_FUNCTIONS = {
