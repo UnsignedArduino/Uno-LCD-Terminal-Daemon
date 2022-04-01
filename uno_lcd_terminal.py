@@ -1,13 +1,13 @@
 import logging
 from enum import Enum
 from time import sleep, time as unix
-from typing import Callable, Optional, Sized
+from typing import Callable, Optional
 
 from serial import Serial
 
 from logger import create_logger
 
-logger = create_logger(name=__name__, level=logging.DEBUG)
+logger = create_logger(name=__name__, level=logging.INFO)
 
 
 class UnoLCDTerminalAttribute(Enum):
@@ -41,12 +41,12 @@ class UnoLCDTerminal:
         """
         self.path = path
 
-    def run(self, update_interval: int, change_interval: int,
+    def run(self, update_interval: float, change_interval: int,
             output_funcs: list[Callable]):
         """
         Connect to the device and start sending text.
 
-        :param update_interval: The update interval, in integer seconds.
+        :param update_interval: The update interval, in float seconds.
         :param change_interval: The time between switching output functions,
          in integer seconds.
         :param output_funcs: A Sized of output functions that we will step
@@ -62,13 +62,13 @@ class UnoLCDTerminal:
             curr_func_idx = 0
 
             def write_cmd(sequence: bytes):
-                logger.debug(f"Command: {sequence}")
+                # logger.debug(f"Command: {sequence}")
                 port.write(sequence)
 
             def read_cmd(sequence: bytes) -> bytes:
                 write_cmd(sequence)
                 b = port.read_until()
-                logger.debug(f"Return: {b}")
+                # logger.debug(f"Return: {b}")
                 return b
 
             port.timeout = 1

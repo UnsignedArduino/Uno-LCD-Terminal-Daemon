@@ -5,9 +5,8 @@ from serial.tools.list_ports import comports
 
 from logger import create_logger
 from outputs import OUTPUT_FUNCTIONS
+import uno_lcd_terminal
 from uno_lcd_terminal import UnoLCDTerminal
-
-logger = create_logger(name=__name__, level=logging.DEBUG)
 
 parser = ArgumentParser(description="Daemon for the Uno LCD Terminal.")
 parser.add_argument("-lp", "--list-ports", dest="list_ports",
@@ -25,15 +24,15 @@ parser.add_argument("-p", "--port", dest="port", metavar="PORT",
                          "-c or --connect. Can be a path or an index from "
                          "-l or --list-ports.")
 parser.add_argument("-u", "--update-interval", dest="update_interval",
-                    metavar="INTERVAL", action="store", type=int,
-                    default=1,
+                    metavar="INTERVAL", action="store", type=float,
+                    default=1.0,
                     help="The update interval for the Uno LCD Terminal in "
-                         "integer seconds. "
+                         "float seconds. "
                          "Required if connecting with -c or --connect. "
-                         "Defaults to 1.")
+                         "Defaults to 1.0.")
 parser.add_argument("-r", "--change-interval", dest="change_interval",
                     metavar="INTERVAL", action="store", type=int,
-                    default=5,
+                    default=10,
                     help="The change interval for the Uno LCD Terminal in "
                          "integer seconds. "
                          "Required if connecting with -c or --connect. "
@@ -41,9 +40,24 @@ parser.add_argument("-r", "--change-interval", dest="change_interval",
 parser.add_argument("-o", "--output", dest="outputs",
                     metavar="NAME", action="append",
                     help="The outputs you want to use. At least one is "
-                         "required if connecting with -c or --connect.")
+                         "required if connecting with -c or --connect. Can be "
+                         "specified multiple times.")
+parser.add_argument("-d", "--debug", dest="debug",
+                    action="store_true",
+                    help="Whether to show debug output or not. ")
 args = parser.parse_args()
+
+logger = create_logger(name=__name__, level=logging.INFO)
 logger.debug(f"Arguments received: {args}")
+
+if args.debug:
+    all_loggers = (
+        logger,
+        uno_lcd_terminal.logger
+    )
+
+    for l in all_loggers:
+        l.setLevel(logging.DEBUG)
 
 if args.list_ports:
     logger.info("Listing connected serial ports")
