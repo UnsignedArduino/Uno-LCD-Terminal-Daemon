@@ -1,11 +1,13 @@
 import logging
 from argparse import ArgumentParser
+from time import sleep
 
+from serial.serialutil import SerialException
 from serial.tools.list_ports import comports
 
+import uno_lcd_terminal
 from logger import create_logger
 from outputs import OUTPUT_FUNCTIONS
-import uno_lcd_terminal
 from uno_lcd_terminal import UnoLCDTerminal
 
 parser = ArgumentParser(description="Daemon for the Uno LCD Terminal.")
@@ -18,6 +20,10 @@ parser.add_argument("-lo", "--list-outputs", dest="list_outputs",
 parser.add_argument("-c", "--connect", dest="connect",
                     action="store_true",
                     help="Connect to an Uno LCD Terminal.")
+parser.add_argument("-a", "--auto-reconnect", dest="auto_reconnect",
+                    action="store_true",
+                    help="When connecting with -c or --connect specifying "
+                         "this will make it automatically reconnect. ")
 parser.add_argument("-p", "--port", dest="port", metavar="PORT",
                     action="store",
                     help="A port to connect to. Required if connecting with "
@@ -102,10 +108,22 @@ elif args.connect:
     if args.outputs is None:
         logger.error("Please specify at least one output function!")
         exit(1)
-    try:
-        term.run(args.update_interval, args.change_interval,
-                 [OUTPUT_FUNCTIONS[o.lower()] for o in args.outputs])
-    except KeyboardInterrupt:
-        logger.warning("Exiting!")
+    time_between_recon = 2
+    while True:
+        try:
+            try:
+                term.run(args.update_interval, args.change_interval,
+                         [OUTPUT_FUNCTIONS[o.lower()] for o in args.outputs])
+            except SerialException:
+                if args.auto_reconnect:
+                    logger.warning(f"Unable to connect to {port_path}, "
+                                   f"retrying in {time_between_recon}s...")
+                    sleep(time_between_recon)
+                    continue
+                else:
+                    logger.error(f"Unable to connect to {port_path}")
+        except KeyboardInterrupt:
+            logger.warning("Exiting!")
+        break
 else:
     logger.warning("Nothing to do!")
