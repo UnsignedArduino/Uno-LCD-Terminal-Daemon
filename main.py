@@ -1,7 +1,11 @@
 import logging
+import sys
 from argparse import ArgumentParser
 from time import sleep
 
+from PyQt5.QtCore import QCoreApplication, QObject, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon, QWidget
 from serial.serialutil import SerialException
 from serial.tools.list_ports import comports
 
@@ -20,10 +24,6 @@ parser.add_argument("-lo", "--list-outputs", dest="list_outputs",
 parser.add_argument("-c", "--connect", dest="connect",
                     action="store_true",
                     help="Connect to an Uno LCD Terminal.")
-parser.add_argument("-a", "--auto-reconnect", dest="auto_reconnect",
-                    action="store_true",
-                    help="When connecting with -c or --connect specifying "
-                         "this will make it automatically reconnect. ")
 parser.add_argument("-p", "--port", dest="port", metavar="PORT",
                     action="store",
                     help="A port to connect to. Required if connecting with "
@@ -64,6 +64,7 @@ if args.debug:
 
     for l in all_loggers:
         l.setLevel(logging.DEBUG)
+
 
 if args.list_ports:
     logger.info("Listing connected serial ports")
@@ -109,21 +110,53 @@ elif args.connect:
         logger.error("Please specify at least one output function!")
         exit(1)
     time_between_recon = 2
-    while True:
-        try:
-            try:
-                term.run(args.update_interval, args.change_interval,
-                         [OUTPUT_FUNCTIONS[o.lower()] for o in args.outputs])
-            except SerialException:
-                if args.auto_reconnect:
+
+
+    class SystemTrayIcon(QSystemTrayIcon):
+        def __init__(self, icon, parent=None):
+            super().__init__(icon, parent)
+            menu = QMenu(parent)
+            menu.setTitle("Uno LCD Terminal Daemon")
+            self.title_action = menu.addAction("Uno LCD Terminal Daemon")
+            self.title_action.setEnabled(False)
+            menu.addSeparator()
+            self.status_action = menu.addAction("Starting")
+            self.status_action.setEnabled(False)
+            menu.addSeparator()
+            self.exit_action = menu.addAction("Exit", QCoreApplication.exit)
+            self.setContextMenu(menu)
+            self.daemon_t = QThread()
+            self.daemon = DaemonQObject()
+            self.daemon.moveToThread(self.daemon_t)
+            self.daemon.finished.connect(self.daemon_t.quit)
+            self.daemon.status.connect(lambda s: self.status_action.setText(s))
+            self.daemon_t.started.connect(self.daemon.run)
+            self.daemon_t.start()
+
+
+    class DaemonQObject(QObject):
+        finished = pyqtSignal()
+        status = pyqtSignal(str)
+
+        def run(self):
+            while True:
+                try:
+                    self.status.emit(f"Connected to {port_path}")
+                    term.run(args.update_interval, args.change_interval,
+                             [OUTPUT_FUNCTIONS[o.lower()] for o in
+                              args.outputs])
+                except SerialException:
+                    self.status.emit(f"Disconnected from {port_path}")
                     logger.warning(f"Unable to connect to {port_path}, "
                                    f"retrying in {time_between_recon}s...")
                     sleep(time_between_recon)
-                    continue
-                else:
-                    logger.error(f"Unable to connect to {port_path}")
-        except KeyboardInterrupt:
-            logger.warning("Exiting!")
-        break
+            self.finished.emit()
+
+
+    app = QApplication(sys.argv)
+    w = QWidget()
+    tray_icon = SystemTrayIcon(QIcon("icon.ico"), w)
+    tray_icon.show()
+    sys.exit(app.exec_())
 else:
     logger.warning("Nothing to do!")
