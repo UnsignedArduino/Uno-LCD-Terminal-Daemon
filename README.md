@@ -7,6 +7,8 @@ The daemon will create an icon in the notification area ([incorrectly known as t
 
 It is hot pluggable, so you can unplug and replug your Uno LCD Terminal back in all you want! (As long as the serial port name stays the same) It's also happy being started on system startup.
 
+![The Uno LCD Terminal with the daemon running](https://user-images.githubusercontent.com/38868705/161362976-7f61f7ba-11e2-4924-9e02-678ab5eecd12.gif)
+
 ## Hardware 
 
 See the [`README.md`](https://github.com/UnsignedArduino/Uno-LCD-Terminal/blob/main/README.m) for the Uno LCD Terminal for instructions and details.
