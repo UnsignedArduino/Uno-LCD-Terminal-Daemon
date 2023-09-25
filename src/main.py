@@ -155,7 +155,7 @@ elif args.connect:
 
     app = QApplication(sys.argv)
     w = QWidget()
-    tray_icon = SystemTrayIcon(QIcon("assets/icon.ico"), w)
+    tray_icon = SystemTrayIcon(QIcon("src/assets/icon.ico"), w)
     tray_icon.show()
     sys.exit(app.exec_())
 else:
